@@ -2,6 +2,105 @@
 
 import { useState } from "react";
 
+// ✅ TagsInput component
+function TagsInput({ onChange }: { onChange: (tags: string[]) => void }) {
+  const [tags, setTags] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState("");
+
+  // Suggested tags
+  const suggestedTags = [
+    "AI",
+    "Healthcare",
+    "Climate",
+    "Finance",
+    "Education",
+    "Blockchain",
+    "Agriculture",
+    "Transportation",
+    "Energy",
+    "Sports",
+  ];
+
+  // Add tag
+  const addTag = (tag: string) => {
+    if (tag.trim() !== "" && !tags.includes(tag)) {
+      const updated = [...tags, tag.trim()];
+      setTags(updated);
+      onChange(updated);
+    }
+    setInputValue("");
+  };
+
+  // Handle Enter/Space key
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Enter" || e.key === " ") && inputValue.trim() !== "") {
+      e.preventDefault();
+      addTag(inputValue);
+    }
+  };
+
+  // Remove tag
+  const removeTag = (tagToRemove: string) => {
+    const updated = tags.filter((tag) => tag !== tagToRemove);
+    setTags(updated);
+    onChange(updated);
+  };
+
+  // Filter suggestions
+  const filteredSuggestions = suggestedTags.filter(
+    (tag) =>
+      tag.toLowerCase().includes(inputValue.toLowerCase()) &&
+      !tags.includes(tag)
+  );
+
+  return (
+    <div className="relative">
+      <label className="block text-sm font-medium mb-2">Tags</label>
+      <div className="flex flex-wrap gap-2 border border-gray-600 rounded-lg p-2 bg-gray-900">
+        {tags.map((tag, index) => (
+          <span
+            key={index}
+            className="flex items-center bg-indigo-600 text-white px-3 py-1 rounded-full text-sm"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={() => removeTag(tag)}
+              className="ml-2 text-xs text-gray-200 hover:text-red-400"
+            >
+              ❌
+            </button>
+          </span>
+        ))}
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="flex-1 bg-transparent outline-none text-white"
+          placeholder="Type and press Enter"
+        />
+      </div>
+
+      {/* Suggestions dropdown */}
+      {inputValue && filteredSuggestions.length > 0 && (
+        <div className="absolute left-0 right-0 mt-1 bg-gray-700 border border-gray-600 rounded-lg shadow-lg z-10">
+          {filteredSuggestions.map((suggestion, idx) => (
+            <div
+              key={idx}
+              onClick={() => addTag(suggestion)}
+              className="px-3 py-2 hover:bg-indigo-600 cursor-pointer rounded-lg"
+            >
+              {suggestion}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ✅ Main CreatePage form
 export default function CreatePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -10,7 +109,7 @@ export default function CreatePage() {
   const [price, setPrice] = useState("");
   const [license, setLicense] = useState("");
   const [format, setFormat] = useState("");
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [sample, setSample] = useState<File | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -23,7 +122,7 @@ export default function CreatePage() {
       price,
       license,
       format,
-      tags: tags.split(",").map((t) => t.trim()),
+      tags,
       sample,
     });
     alert("✅ Dataset form submitted (check console for data)");
@@ -144,20 +243,8 @@ export default function CreatePage() {
           </select>
         </div>
 
-        {/* Tags */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Tags</label>
-          <input
-            type="text"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="e.g. AI, healthcare, CSV"
-            className="w-full rounded-lg border border-gray-600 bg-gray-900 p-2 text-white focus:ring-2 focus:ring-indigo-500"
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            Separate multiple tags with commas
-          </p>
-        </div>
+        {/* ✅ Tags Component */}
+        <TagsInput onChange={setTags} />
 
         {/* Sample Upload */}
         <div>
