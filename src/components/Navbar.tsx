@@ -7,6 +7,11 @@ import { useWallet } from '@/context/WalletContext';
 export default function Navbar() {
   const { walletAddress, connectWallet } = useWallet();
 
+  // Create the truncated address for display
+  const displayAddress = walletAddress
+    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+    : "Connect Wallet";
+
   return (
     <header className="bg-gray-800 text-white p-4 sticky top-0 z-50 shadow-lg">
       <nav className="container mx-auto flex justify-between items-center">
