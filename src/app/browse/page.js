@@ -1,7 +1,6 @@
 // src/app/browse/page.js
 import DatasetCard from '../components/DatasetCard';
 import React from 'react';
-import DatasetCard from '../../components/DatasetCard'; // Adjust the path as needed
 
 // This is an example of what your data might look like
 // In a real app, this would likely come from an API call
