@@ -1,105 +1,112 @@
-# Project Name: [Enter Your Project Name Here]
+# Project Name: OnChainMarketplace - Frontend
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Tech Stack](https://img.shields.io/badge/tech-Next.js%20%7C%20Django%20%7C%20Solidity-brightgreen)
+![Tech Stack](https://img.shields.io/badge/tech-Next.js%20%7C%20Ethers.js%20%7C%20Solidity-brightgreen)
 
-This project is a full-stack decentralized application (dApp) for a data marketplace. It allows users to publish, own, and purchase datasets using blockchain technology for verifiable ownership and IPFS for decentralized storage.
+This is the frontend for a decentralized data marketplace. It's a Next.js application that allows users to connect their crypto wallets, browse datasets registered on the blockchain, and publish new datasets via IPFS.
+
+This repository contains the user interface. The smart contracts and backend logic are located in a separate repository.
 
 ---
 
 ## Architecture Overview
 
-The project is structured as a monorepo containing two main modules:
+This project is built using a **polyrepo** structure, with the backend and frontend in separate repositories to maintain a clean separation of concerns.
 
-1.  **`/frontend`**: A Next.js/React application that serves as the user interface and primary client for interacting with the blockchain.
-2.  **`/blockchain`**: A Hardhat project containing the Solidity smart contracts that act as the on-chain "source of truth".
-3.  **`/backend`**: (Optional) A Django API that can be used as a secure bridge for advanced features like gasless transactions.
+* **Backend Repository**: [**Link to your Backend Repository Here**]
+    * Contains the Solidity smart contracts.
+    * Managed with the Hardhat development environment.
+    * Responsible for contract compilation, testing, and deployment.
+
+* **Frontend Repository** (This one):
+    * Contains the Next.js user interface.
+    * Connects to users' wallets (e.g., MetaMask).
+    * Interacts with the deployed smart contract via an RPC provider.
+    * Handles file uploads to IPFS via a pinning service.
 
 ---
 
-## Getting Started
+## Getting Started: A Complete "Zero-to-Running" Guide
 
 Follow these instructions to set up and run the entire project locally.
 
 ### Prerequisites
 
+Before you begin, ensure you have the following installed:
+
 * [**Node.js**](https://nodejs.org/) (v18 or later)
-* [**Python**](https://www.python.org/downloads/) (v3.8 or later) & `pip`
-* [**MetaMask**](https://metamask.io/download/) browser extension
+* [**npm**](https://www.npmjs.com/) (comes with Node.js)
+* A **MetaMask** browser extension ([download here](https://metamask.io/download/))
+* Free accounts with [**Alchemy**](https://alchemy.com) and [**Pinata**](https://pinata.cloud).
 
-### 1. Backend & Smart Contract Setup
+### Part 1: Backend & Smart Contract Setup (Required First)
 
-First, set up and deploy the smart contract.
+You must deploy the smart contract before the frontend can run properly.
 
-1.  **Navigate to the blockchain directory:**
+1.  **Clone the Backend Repository:**
     ```bash
-    cd blockchain
+    git clone [URL_OF_YOUR_BACKEND_REPO]
+    cd [backend-repo-name]
     ```
 
-2.  **Install dependencies:**
+2.  **Install Backend Dependencies:**
     ```bash
     npm install
     ```
 
-3.  **Set up environment variables:**
-    Create a `.env` file in the `/blockchain` directory and add the following, filling in your own keys:
+3.  **Set Up Backend Environment Variables:**
+    Create a file named `.env` in the root of the backend project folder. Add your secrets:
     ```
     SEPOLIA_RPC_URL="<your_alchemy_sepolia_rpc_url>"
     SEPOLIA_PRIVATE_KEY="<your_metamask_private_key>"
     ```
 
-4.  **Deploy the contract to Sepolia:**
+4.  **Get Testnet ETH:**
+    Make sure the wallet associated with your `SEPOLIA_PRIVATE_KEY` has some Sepolia ETH for gas fees. You can get some from a [Proof-of-Work Faucet](https://sepolia-faucet.pk910.de/).
+
+5.  **Deploy the Contract:**
+    Run the deployment script. This will compile and deploy your contract to the Sepolia testnet.
     ```bash
     npx hardhat run scripts/deploy.ts --network sepolia
     ```
-    After running, **copy the deployed contract address** that is printed in the terminal. You will need it for the frontend setup.
+    After a successful deployment, the terminal will print a message like `Contract deployed to: 0x...`. **Copy this deployed contract address.** You will need it in the next part.
 
-### 2. Frontend Setup
+### Part 2: Frontend Setup (This Repository)
 
-Next, set up the user-facing application.
+Now, let's set up the user-facing application.
 
-1.  **Navigate to the frontend directory:**
+1.  **Clone This Frontend Repository (in a new terminal window):**
     ```bash
-    # From the root directory
-    cd frontend
+    git clone [URL_OF_YOUR_FRONTEND_REPO]
+    cd [frontend-repo-name]
     ```
 
-2.  **Install dependencies:**
+2.  **Install Frontend Dependencies:**
     ```bash
     npm install
     ```
 
-3.  **Set up environment variables:**
+3.  **Set up Frontend Environment Variables:**
     This project includes a helpful setup script. Run the following command:
     ```bash
     npm run setup
     ```
-    The script will interactively prompt you for the following keys:
-    * **Alchemy RPC URL** (for the Sepolia testnet)
-    * **The Deployed Contract Address** (which you copied from the backend step)
-    * **Pinata JWT** (for IPFS uploads)
+    The script will interactively prompt you for your personal API keys. You will also need the contract address from the backend setup.
 
-4.  **Run the development server:**
+4.  **Run the Development Server:**
     ```bash
     npm run dev
     ```
-    Your frontend will be available at [http://localhost:3000](http://localhost:3000).
-
----
-
-## Troubleshooting
-
-* **`MetaMask not detected`**: Make sure you are using a compatible browser (Chrome, Firefox, Brave) and that the MetaMask extension is installed and enabled.
-* **`HardhatError: SEPOLIA_RPC_URL not found`**: Ensure the `.env` file exists in your `/blockchain` directory and is correctly named and populated. You may need to restart your terminal.
-* **`Git Merge Conflicts`**: Always run `git pull origin main` on your `main` branch before creating a new feature branch to ensure you are working from the most up-to-date code.
+    Your frontend will now be available at [**http://localhost:3000**](http://localhost:3000).
 
 ---
 
 ## Contributing
 
-We follow the standard feature-branch workflow.
+We follow the standard feature-branch Git workflow.
 
-1.  Create a new branch from `main`: `git checkout -b feature/my-new-feature`
-2.  Make your changes and commit them.
-3.  Push your branch to the repository: `git push origin feature/my-new-feature`
-4.  Open a **Pull Request** on GitHub for review.
+1.  Ensure your `main` branch is up-to-date: `git checkout main && git pull origin main`
+2.  Create a new branch for your feature: `git checkout -b feature/my-new-feature`
+3.  Make your changes and commit them with a clear message.
+4.  Push your branch to the repository: `git push origin feature/my-new-feature`
+5.  Open a **Pull Request** on GitHub for review and merging.
