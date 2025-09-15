@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Project Name: [Enter Your Project Name Here]
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Tech Stack](https://img.shields.io/badge/tech-Next.js%20%7C%20Django%20%7C%20Solidity-brightgreen)
+
+This project is a full-stack decentralized application (dApp) for a data marketplace. It allows users to publish, own, and purchase datasets using blockchain technology for verifiable ownership and IPFS for decentralized storage.
+
+---
+
+## Architecture Overview
+
+The project is structured as a monorepo containing two main modules:
+
+1.  **`/frontend`**: A Next.js/React application that serves as the user interface and primary client for interacting with the blockchain.
+2.  **`/blockchain`**: A Hardhat project containing the Solidity smart contracts that act as the on-chain "source of truth".
+3.  **`/backend`**: (Optional) A Django API that can be used as a secure bridge for advanced features like gasless transactions.
+
+---
 
 ## Getting Started
 
-First, run the development server:
+Follow these instructions to set up and run the entire project locally.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Prerequisites
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* [**Node.js**](https://nodejs.org/) (v18 or later)
+* [**Python**](https://www.python.org/downloads/) (v3.8 or later) & `pip`
+* [**MetaMask**](https://metamask.io/download/) browser extension
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### 1. Backend & Smart Contract Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+First, set up and deploy the smart contract.
 
-## Learn More
+1.  **Navigate to the blockchain directory:**
+    ```bash
+    cd blockchain
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3.  **Set up environment variables:**
+    Create a `.env` file in the `/blockchain` directory and add the following, filling in your own keys:
+    ```
+    SEPOLIA_RPC_URL="<your_alchemy_sepolia_rpc_url>"
+    SEPOLIA_PRIVATE_KEY="<your_metamask_private_key>"
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4.  **Deploy the contract to Sepolia:**
+    ```bash
+    npx hardhat run scripts/deploy.ts --network sepolia
+    ```
+    After running, **copy the deployed contract address** that is printed in the terminal. You will need it for the frontend setup.
 
-## Deploy on Vercel
+### 2. Frontend Setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Next, set up the user-facing application.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  **Navigate to the frontend directory:**
+    ```bash
+    # From the root directory
+    cd frontend
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Set up environment variables:**
+    This project includes a helpful setup script. Run the following command:
+    ```bash
+    npm run setup
+    ```
+    The script will interactively prompt you for the following keys:
+    * **Alchemy RPC URL** (for the Sepolia testnet)
+    * **The Deployed Contract Address** (which you copied from the backend step)
+    * **Pinata JWT** (for IPFS uploads)
+
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    Your frontend will be available at [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Troubleshooting
+
+* **`MetaMask not detected`**: Make sure you are using a compatible browser (Chrome, Firefox, Brave) and that the MetaMask extension is installed and enabled.
+* **`HardhatError: SEPOLIA_RPC_URL not found`**: Ensure the `.env` file exists in your `/blockchain` directory and is correctly named and populated. You may need to restart your terminal.
+* **`Git Merge Conflicts`**: Always run `git pull origin main` on your `main` branch before creating a new feature branch to ensure you are working from the most up-to-date code.
+
+---
+
+## Contributing
+
+We follow the standard feature-branch workflow.
+
+1.  Create a new branch from `main`: `git checkout -b feature/my-new-feature`
+2.  Make your changes and commit them.
+3.  Push your branch to the repository: `git push origin feature/my-new-feature`
+4.  Open a **Pull Request** on GitHub for review.
