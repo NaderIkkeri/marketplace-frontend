@@ -129,7 +129,7 @@ export default function CreatePage() {
       console.error(error);
     }
   };
-
+  console.log({ ipfsCid: ipfsCid, isSubmitDisabled: !ipfsCid });
   return (
     <div className="max-w-3xl mx-auto bg-gray-800 text-white p-6 rounded-2xl shadow-lg">
       <h1 className="text-3xl font-bold mb-6">Create New Dataset</h1>
