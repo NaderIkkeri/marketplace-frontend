@@ -4,11 +4,12 @@ import { useState } from "react";
 import { ethers } from 'ethers';
 import { useWallet } from '@/context/WalletContext';
 import { X } from 'lucide-react';
-import { useRouter } from 'next/navigation'; // Import the router
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast'; // 1. Import toast
+import ButtonSpinner from "@/components/common/ButtonSpinner"; // 2. Import our new spinner
 
-// (The TagsInput component code remains the same as you provided)
+// (TagsInput component code remains the same as you provided)
 function TagsInput({ onChange }: { onChange: (tags: string[]) => void }) {
-  // ... your existing TagsInput component code ...
   const [tags, setTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
   const suggestedTags = ["AI", "Healthcare", "Climate", "Finance", "Education", "Blockchain", "Agriculture", "Transportation", "Energy", "Sports"];
@@ -55,12 +56,11 @@ export default function CreatePage() {
   const [price, setPrice] = useState("");
   const [format, setFormat] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  // (We'll ignore license and sample for now to keep it simple)
 
-  // 2. New state for handling uploads and submissions
+  // 2. New boolean loading states
   const [ipfsCid, setIpfsCid] = useState<string>("");
-  const [uploadStatus, setUploadStatus] = useState<string>("");
-  const [submitStatus, setSubmitStatus] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 3. Get wallet context and router for navigation
   const { contract, signer } = useWallet();
@@ -69,24 +69,30 @@ export default function CreatePage() {
   // 4. Function to handle file upload to our API route -> Pinata
   const handleUploadToIpfs = async () => {
     if (!file) {
-      setUploadStatus("Please select a file first.");
+      toast.error("Please select a file first.");
       return;
     }
-    setUploadStatus("Uploading to IPFS...");
+    
+    setIsUploading(true);
+    const loadingToastId = toast.loading("Uploading to IPFS..."); // Show loading toast
+
     try {
       const formData = new FormData();
       formData.append('file', file);
       const response = await fetch('/api/upload', { method: 'POST', body: formData });
       const data = await response.json();
+
       if (data.success) {
-        setUploadStatus(`✅ Upload successful!`);
+        toast.success("✅ Upload successful!", { id: loadingToastId });
         setIpfsCid(data.cid);
       } else {
-        setUploadStatus(`Upload failed: ${data.error}`);
+        toast.error(`Upload failed: ${data.error}`, { id: loadingToastId });
       }
     } catch (error) {
-      setUploadStatus("Upload failed. See console for details.");
+      toast.error("Upload failed. See console for details.", { id: loadingToastId });
       console.error(error);
+    } finally {
+      setIsUploading(false); // Stop loading state
     }
   };
 
@@ -94,20 +100,21 @@ export default function CreatePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ipfsCid) {
-      setSubmitStatus("Please upload a file to IPFS first.");
+      toast.error("Please upload a file to IPFS first.");
       return;
     }
     if (!contract || !signer) {
-      setSubmitStatus("Please connect your wallet first.");
+      toast.error("Please connect your wallet first.");
       return;
     }
 
-    setSubmitStatus("Submitting transaction to the blockchain...");
+    setIsSubmitting(true);
 
     try {
       // Convert price from ETH string to wei BigInt
       const priceInWei = ethers.parseEther(price);
       
+      // Create the transaction
       const tx = await contract.createDataset(
         name,
         description,
@@ -117,19 +124,28 @@ export default function CreatePage() {
         priceInWei
       );
 
-      setSubmitStatus("Waiting for transaction confirmation...");
-      await tx.wait(); // Wait for the transaction to be mined
+      // Use toast.promise to handle loading, success, and error
+      await toast.promise(
+        tx.wait(), // Wait for the transaction to be mined
+        {
+          loading: 'Submitting to blockchain...',
+          success: '✅ Dataset created successfully!',
+          error: 'Transaction failed. See console.'
+        }
+      );
 
-      setSubmitStatus("✅ Dataset created successfully! Redirecting...");
-      // Redirect to the browse page after a short delay
+      // Redirect to the browse page after success
       setTimeout(() => router.push('/browse'), 2000);
 
     } catch (error) {
-      setSubmitStatus("Transaction failed. See console for details.");
+      // This catches errors *before* the transaction is sent (e.g., user rejects)
+      toast.error("Transaction was rejected or failed.");
       console.error(error);
+    } finally {
+      setIsSubmitting(false); // Stop loading state
     }
   };
-  console.log({ ipfsCid: ipfsCid, isSubmitDisabled: !ipfsCid });
+  
   return (
     <div className="max-w-3xl mx-auto bg-gray-800 text-white p-6 rounded-2xl shadow-lg">
       <h1 className="text-3xl font-bold mb-6">Create New Dataset</h1>
@@ -145,12 +161,12 @@ export default function CreatePage() {
         <button
           type="button"
           onClick={handleUploadToIpfs}
-          className="w-full py-2 px-4 bg-blue-600 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-500"
-          disabled={!file || uploadStatus.includes('Uploading')}
+          className="w-full h-11 flex justify-center items-center py-2 px-4 bg-blue-600 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-500"
+          disabled={!file || isUploading}
         >
-          {uploadStatus.includes('Uploading') ? 'Uploading...' : 'Upload to IPFS'}
+          {isUploading ? <ButtonSpinner /> : 'Upload to IPFS'}
         </button>
-        {uploadStatus && <p className="text-sm text-center text-gray-400">{uploadStatus}</p>}
+        {/* We removed the old status text <p> tag */}
         {ipfsCid && (
           <div className="p-2 bg-gray-900 rounded-lg">
             <p className="text-xs text-gray-500">IPFS CID:</p>
@@ -204,12 +220,12 @@ export default function CreatePage() {
 
         <button
           type="submit"
-          className="w-full py-3 px-4 bg-indigo-600 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-gray-500 disabled:cursor-not-allowed"
-          disabled={!ipfsCid || submitStatus.includes('Submitting') || submitStatus.includes('Waiting')}
+          className="w-full h-12 flex justify-center items-center py-3 px-4 bg-indigo-600 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:bg-gray-500 disabled:cursor-not-allowed"
+          disabled={!ipfsCid || isSubmitting}
         >
-          {submitStatus.includes('Submitting') || submitStatus.includes('Waiting') ? 'Processing...' : 'Submit Dataset to Blockchain'}
+          {isSubmitting ? <ButtonSpinner /> : 'Submit Dataset to Blockchain'}
         </button>
-        {submitStatus && <p className="text-sm text-center text-gray-400 mt-4">{submitStatus}</p>}
+        {/* We removed the old status text <p> tag */}
       </form>
     </div>
   );
