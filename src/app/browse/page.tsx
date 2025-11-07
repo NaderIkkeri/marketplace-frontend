@@ -28,7 +28,7 @@ const BrowsePage = () => {
 
         // 5. Format the raw data from the contract to match our `Dataset` type
         const formattedDatasets = onChainDatasets.map((dataset: any, index: number) => ({
-          id: Number(dataset.id), // Using index as a key for now
+          id: Number(dataset.id),
           name: dataset.name,
           description: dataset.description,
           category: dataset.category,
@@ -72,7 +72,7 @@ const BrowsePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {datasets.map((dataset) => (
               <Link href={`/browse/${dataset.id}`} key={dataset.id}>
-                <DatasetCard dataset={{ ...dataset, id: dataset.id + 1 }} />
+                <DatasetCard dataset={dataset} />
               </Link>
             ))}
           </div>

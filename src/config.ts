@@ -1,2 +1,1 @@
-// src/config.ts
 export const CONTRACT_ADDRESS = "0x1469c5FBf0F0d9181e2A61C8CfD14e147A566Aa2";
