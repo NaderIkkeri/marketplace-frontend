@@ -5,8 +5,8 @@ import { ethers } from 'ethers';
 import { useWallet } from '@/context/WalletContext';
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast'; // 1. Import toast
-import ButtonSpinner from "@/components/common/ButtonSpinner"; // 2. Import our new spinner
+import { toast } from 'react-hot-toast';
+import ButtonSpinner from "@/components/common/ButtonSpinner";
 
 // (TagsInput component code remains the same as you provided)
 function TagsInput({ onChange }: { onChange: (tags: string[]) => void }) {
@@ -63,7 +63,8 @@ export default function CreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 3. Get wallet context and router for navigation
-  const { contract, signer } = useWallet();
+  // We get walletAddress to check for connection
+  const { contract, walletAddress } = useWallet();
   const router = useRouter();
 
   // 4. Function to handle file upload to our API route -> Pinata
@@ -103,7 +104,10 @@ export default function CreatePage() {
       toast.error("Please upload a file to IPFS first.");
       return;
     }
-    if (!contract || !signer) {
+
+    // --- THIS IS THE FIX ---
+    // We check for walletAddress instead of signer
+    if (!contract || !walletAddress) {
       toast.error("Please connect your wallet first.");
       return;
     }
@@ -114,7 +118,7 @@ export default function CreatePage() {
       // Convert price from ETH string to wei BigInt
       const priceInWei = ethers.parseEther(price);
       
-      // Create the transaction
+      // The 'contract' object from useWallet() already has the signer
       const tx = await contract.createDataset(
         name,
         description,
