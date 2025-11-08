@@ -4,92 +4,123 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 import { ethers } from 'ethers';
 import contractABI from '@/contracts/DatasetNFT.json';
 import { CONTRACT_ADDRESS } from '@/config';
-import { toast } from 'react-hot-toast'; // 1. Import toast
+import { toast } from 'react-hot-toast'; 
 
 interface WalletContextType {
-  walletAddress: string;
-  isModalOpen: boolean;
-  connectWallet: () => Promise<void>;
-  closeModal: () => void;
-  provider: ethers.JsonRpcProvider | null;
-  signer: ethers.JsonRpcSigner | null;
-  contract: ethers.Contract | null;
+  walletAddress: string;
+  isModalOpen: boolean;
+  connectWallet: () => Promise<void>;
+  closeModal: () => void;
+  provider: ethers.JsonRpcProvider | null;
+  signer: ethers.JsonRpcSigner | null;
+  contract: ethers.Contract | null;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [walletAddress, setWalletAddress] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [provider, setProvider] = useState<ethers.JsonRpcProvider | null>(null);
-  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
-  const [contract, setContract] = useState<ethers.Contract | null>(null);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [provider, setProvider] = useState<ethers.JsonRpcProvider | null>(null);
+  const [contract, setContract] = useState<ethers.Contract | null>(null);
+  
+  // Note: We don't need to store the signer in state, 
+  // as it's mainly used for signing transactions.
+  // The 'contract' state will be updated to hold the 'contract with signer'.
 
-  useEffect(() => {
-    const initEthers = async () => {
-      const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
-      
-      if (rpcUrl && CONTRACT_ADDRESS) {
-        const newProvider = new ethers.JsonRpcProvider(rpcUrl);
-        setProvider(newProvider);
+  // --- NEW HELPER FUNCTION ---
+  // This function sets up the user's signer and updates the contract
+  const setupSigner = async (browserProvider: ethers.BrowserProvider, baseContract: ethers.Contract) => {
+    try {
+      const newSigner = await browserProvider.getSigner();
+      const address = await newSigner.getAddress();
+      setWalletAddress(address);
 
-        const newContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, newProvider);
-        setContract(newContract);
+      // Connect the signer to the contract
+      const contractWithSigner = baseContract.connect(newSigner) as ethers.Contract;
+      setContract(contractWithSigner);
 
-        try {
-          const blockNumber = await newProvider.getBlockNumber();
-          console.log(`Successfully connected to Sepolia. Latest block: ${blockNumber}`);
-        } catch (error) {
-          console.error("Failed to connect to Sepolia:", error);
-        }
-      }
-    };
-    initEthers();
-  }, []);
+      return address; // Return address for success toast
+    } catch (error) {
+      console.error("Failed to setup signer:", error);
+      toast.error("Could not connect to wallet. Please try again.");
+    }
+  };
 
-  const closeModal = () => setIsModalOpen(false);
+  // --- THIS USEEFFECT IS NOW UPDATED ---
+  useEffect(() => {
+    const initEthers = async () => {
+      const rpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
+      
+      if (rpcUrl && CONTRACT_ADDRESS) {
+        // 1. Set up the read-only provider and contract
+        const newProvider = new ethers.JsonRpcProvider(rpcUrl);
+        setProvider(newProvider);
+        const newContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, newProvider);
+        setContract(newContract); // Set the read-only contract first
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== "undefined") {
-      try {
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        const newSigner = await browserProvider.getSigner();
-        setSigner(newSigner);
-        
-        const address = await newSigner.getAddress();
-        setWalletAddress(address);
-        
-        if (contract) {
-          const contractWithSigner = contract.connect(newSigner) as ethers.Contract;
-          setContract(contractWithSigner);
-        }
+        // 2. --- THIS IS THE FIX FOR REFRESHING ---
+        // Check if MetaMask is installed
+        if (typeof window.ethereum !== "undefined") {
+          const browserProvider = new ethers.BrowserProvider(window.ethereum);
+          
+          // Check if the user is already connected
+          const accounts = await browserProvider.listAccounts();
+          if (accounts.length > 0) {
+            console.log("Wallet already connected. Setting up signer...");
+            // If already connected, set up the signer automatically
+            await setupSigner(browserProvider, newContract);
+          }
+        }
+        // ------------------------------------------
 
-        // 2. Add success toast
-        toast.success('Wallet connected successfully!');
+      }
+    };
+    initEthers();
+  }, []); // <-- Empty array means this runs only ONCE on page load
 
-      } catch (error) {
-        console.error("User rejected request:", error);
-        // 3. Add error toast for rejection
+  const closeModal = () => setIsModalOpen(false);
+
+  // --- THIS FUNCTION IS NOW UPDATED ---
+  const connectWallet = async () => {
+    if (typeof window.ethereum !== "undefined" && provider && contract) {
+      try {
+        const browserProvider = new ethers.BrowserProvider(window.ethereum);
+        
+        // This will prompt the user to connect
+        await browserProvider.send("eth_requestAccounts", []);
+        
+        // Set up the signer after user connects
+        const address = await setupSigner(browserProvider, contract);
+
+        if (address) {
+          toast.success('Wallet connected successfully!');
+        }
+
+      } catch (error) {
+        console.error("User rejected request:", error);
         toast.error('User rejected wallet connection.');
-      }
-    } else {
-      // 4. Add error toast for no MetaMask
+      }
+    } else if (!provider || !contract) {
+      toast.error('Provider not initialized. Please refresh the page.');
+    } else {
       toast.error('MetaMask not found. Please install the extension.');
-      setIsModalOpen(true);
-    }
-  };
+      setIsModalOpen(true);
+    }
+  };
 
-  return (
-    <WalletContext.Provider value={{ walletAddress, isModalOpen, connectWallet, closeModal, provider, signer, contract }}>
-      {children}
-    </WalletContext.Provider>
-  );
+  return (
+    // We pass the read-only provider, but the signer-connected contract
+    <WalletContext.Provider value={{ walletAddress, isModalOpen, connectWallet, closeModal, provider, signer: null, contract }}>
+      {children}
+    </WalletContext.Provider>
+  );
 }
 
 export function useWallet() {
-  const context = useContext(WalletContext);
-  if (context === undefined) {
-    throw new Error('useWallet must be used within a WalletProvider');
-  }
-  return context;
+  const context = useContext(WalletContext);
+  if (context === undefined) {
+    throw new Error('useWallet must be used within a WalletProvider');
+  }
+  return context;
 }

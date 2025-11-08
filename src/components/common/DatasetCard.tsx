@@ -2,7 +2,6 @@
 import React from 'react';
 
 // --- TYPESCRIPT DEFINITIONS ---
-// This defines the data structure the card component will accept.
 export type Dataset = {
   id: number;
   name: string;
@@ -18,7 +17,6 @@ type DatasetCardProps = {
 };
 
 // --- HELPER FUNCTION ---
-// A small utility to truncate wallet addresses for better display.
 const truncateAddress = (address: string): string => {
   if (!address) return '';
   return `${address.slice(0, 6)}...${address.slice(address.length - 4)}`;
@@ -50,16 +48,20 @@ const DatasetCard: React.FC<DatasetCardProps> = ({ dataset }) => {
         </span>
       </div>
 
-      {/* Card Body */}
-      <p className="text-gray-400 text-sm flex-grow mb-4">
+      {/* --- THIS IS THE FIX ---
+          1. Removed 'flex-grow'
+          2. Added 'line-clamp-4' to limit text to 4 lines.
+          This will add a "..." at the end of long descriptions.
+      */}
+      <p className="text-gray-400 text-sm line-clamp-4 mb-4">
         {dataset.description}
       </p>
 
       {/* Card Footer */}
       <div className="mt-auto border-t border-gray-700 pt-4 flex justify-between items-center text-sm">
         <div className="flex flex-col">
-           <span className="text-gray-500 text-xs mb-1">Owner</span>
-           <span className="font-mono text-gray-400">{truncateAddress(dataset.ownerAddress)}</span>
+            <span className="text-gray-500 text-xs mb-1">Owner</span>
+            <span className="font-mono text-gray-400">{truncateAddress(dataset.ownerAddress)}</span>
         </div>
         <div className="text-right">
           <span className="bg-gray-700 text-gray-300 text-xs font-medium px-2 py-1 rounded-md mr-2">{dataset.format}</span>
