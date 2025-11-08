@@ -69,10 +69,14 @@ const DatasetDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
   }, [contract, datasetId]);
 
   // --- New Function: handlePurchase ---
-  const handlePurchase = async () => {
-    if (!signer || !contract) {
+ const handlePurchase = async () => {
+    
+    // --- THIS IS THE FIX ---
+    // Check for 'walletAddress' to confirm connection, not 'signer'
+    if (!contract || !walletAddress) {
       setPurchaseStatus("Please connect your wallet first.");
-      // Consider calling connectWallet() automatically here if desired
+      // You can also call connectWallet() here if you want to be helpful
+      // connectWallet(); 
       return;
     }
     if (!dataset) {
@@ -91,6 +95,8 @@ const DatasetDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
       const priceInWei = ethers.parseEther(priceString);
 
       setPurchaseStatus("Please confirm the transaction in your wallet...");
+      
+      // The 'contract' object from useWallet() already has the signer
       const tx = await contract.purchaseDataset(dataset.id, {
         value: priceInWei
       });
@@ -106,8 +112,8 @@ const DatasetDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
       if (err.code === 'ACTION_REJECTED') {
         setPurchaseStatus("Transaction cancelled by user.");
       } else {
-         const reason = err.reason || "Check console for details.";
-         setPurchaseStatus(`Purchase failed: ${reason}`);
+          const reason = err.reason || "Check console for details.";
+          setPurchaseStatus(`Purchase failed: ${reason}`);
       }
       setIsPurchasing(false);
     }
