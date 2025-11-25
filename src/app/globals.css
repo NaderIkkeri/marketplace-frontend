@@ -22,30 +22,27 @@ body {
   color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   overflow-x: hidden;
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="%238b5cf6" stroke-width="2" opacity="0.6"/><circle cx="12" cy="12" r="3" fill="%23ec4899"/></svg>') 12 12, auto;
 }
 
-/* Custom cursor for interactive elements */
-button,
-a,
-input,
-textarea,
-select,
-.cursor-pointer {
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="%23ec4899" stroke-width="2.5" opacity="0.8"/><circle cx="16" cy="16" r="4" fill="%238b5cf6"/></svg>') 16 16, pointer;
+/* Style select dropdowns */
+select {
+  color-scheme: dark;
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
-/* Hide custom cursor on touch devices */
-@media (hover: none) and (pointer: coarse) {
-  body,
-  button,
-  a,
-  input,
-  textarea,
-  select,
-  .cursor-pointer {
-    cursor: auto !important;
-  }
+select option {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  padding: 12px;
+}
+
+select option:checked {
+  background-color: #1a1a1a !important;
+  background: linear-gradient(0deg, #1a1a1a 0%, #1a1a1a 100%) !important;
+}
+
+select option:hover {
+  background-color: #2a2a2a !important;
 }
 
 /* Gradient backgrounds */
