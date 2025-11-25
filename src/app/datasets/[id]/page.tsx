@@ -1,9 +1,13 @@
 // src/app/datasets/[id]/page.tsx
-import React from 'react';
-import { type Dataset } from '@/components/common/DatasetCard'; // Assuming type is exported from DatasetCard
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import { type Dataset } from '@/components/common/DatasetCard';
+import { useWallet } from '@/context/WalletContext';
+import { toast } from 'react-hot-toast';
 
 // --- MOCK DATA ---
-// In a real application, this data would be fetched from your DRF backend.
 const allDatasets: Dataset[] = [
   {
     id: 1,
@@ -26,18 +30,75 @@ const allDatasets: Dataset[] = [
 ];
 
 // --- HELPER FUNCTION ---
-// A small utility to truncate wallet addresses.
 const truncateAddress = (address: string): string => {
   if (!address) return '';
   return `${address.slice(0, 6)}...${address.slice(address.length - 4)}`;
 };
 
 // --- THE PAGE COMPONENT ---
-// Next.js automatically passes `params` to dynamic pages.
 const DatasetDetailPage = ({ params }: { params: { id: string } }) => {
+  const { contract, walletAddress } = useWallet();
+  const [isBuying, setIsBuying] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
+
   // Find the dataset by its ID from the URL params.
-  // The ID from params is a string, so we convert it to a number.
   const dataset = allDatasets.find(d => d.id === parseInt(params.id, 10));
+
+  // --- LOGIC: Check Access (Ownership or Purchase) ---
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!contract || !walletAddress || !dataset) return;
+
+      try {
+        // 1. Check if the logged-in user is the creator (Owner)
+        if (dataset.ownerAddress.toLowerCase() === walletAddress.toLowerCase()) {
+          setHasAccess(true);
+          return;
+        }
+
+        // 2. Check if the user has already purchased this dataset
+        // We look for past "DatasetPurchased" events for this specific ID and User
+        const filter = contract.filters.DatasetPurchased(dataset.id, walletAddress);
+        const events = await contract.queryFilter(filter);
+
+        if (events.length > 0) {
+          setHasAccess(true);
+        }
+      } catch (error) {
+        console.error("Error checking access:", error);
+      }
+    };
+
+    checkAccess();
+  }, [contract, walletAddress, dataset]);
+
+  // --- LOGIC: Handle Purchase ---
+  const handlePurchase = async () => {
+    if (!contract || !dataset) return;
+    setIsBuying(true);
+
+    try {
+      // Convert "0.1 ETH" string to Wei
+      const priceString = dataset.price.replace(' ETH', '');
+      const priceInWei = ethers.parseEther(priceString);
+
+      const tx = await contract.purchaseDataset(dataset.id, {
+        value: priceInWei
+      });
+
+      toast.loading("Processing transaction...", { id: 'tx' });
+      await tx.wait(); // Wait for confirmation
+      
+      toast.success("Purchase successful!", { id: 'tx' });
+      setHasAccess(true); // Grant access immediately without refresh
+
+    } catch (error: any) {
+      console.error("Purchase failed:", error);
+      toast.error(error.reason || "Transaction failed", { id: 'tx' });
+    } finally {
+      setIsBuying(false);
+    }
+  };
 
   // If no dataset is found, display a message.
   if (!dataset) {
@@ -83,9 +144,35 @@ const DatasetDetailPage = ({ params }: { params: { id: string } }) => {
                 <span className="text-gray-200">2 weeks ago</span>
               </div>
             </div>
-            <button className="w-full mt-8 bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-              Purchase Access
-            </button>
+
+            {/* --- ACTION BUTTON SECTION --- */}
+            <div className="mt-8">
+              {!walletAddress ? (
+                <button disabled className="w-full bg-gray-700 text-gray-400 font-bold py-3 rounded-lg cursor-not-allowed">
+                  Connect Wallet to View
+                </button>
+              ) : hasAccess ? (
+                // IF OWNED: Show Download Button
+                <button 
+                  onClick={() => toast.success("Downloading...")}
+                  className="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors duration-300 flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  Download Dataset
+                </button>
+              ) : (
+                // IF NOT OWNED: Show Purchase Button
+                <button 
+                  onClick={handlePurchase}
+                  disabled={isBuying}
+                  className={`w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isBuying ? 'opacity-70 cursor-wait' : ''}`}
+                >
+                  {isBuying ? 'Processing...' : 'Purchase Access'}
+                </button>
+              )}
+            </div>
+            {/* ----------------------------- */}
+
           </div>
 
           {/* Right Column: Further Details/Preview (Placeholder) */}
@@ -102,4 +189,3 @@ const DatasetDetailPage = ({ params }: { params: { id: string } }) => {
 };
 
 export default DatasetDetailPage;
-
