@@ -1,33 +1,23 @@
-// src/components/Layout.tsx
 "use client";
 
 import Navbar from './Navbar';
-import Footer from './Footer';
 import NoWalletModal from './common/NoWalletModal';
+import CustomCursor from './common/CustomCursor';
 import { useWallet } from '@/context/WalletContext';
+import { usePathname } from 'next/navigation';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  // 1. Get walletAddress from the context
-  const { isModalOpen, closeModal, walletAddress } = useWallet();
-
-  // 2. Create the truncated address for display
-  const displayAddress = walletAddress
-    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
-    : null;
+  const { isModalOpen, closeModal } = useWallet();
+  const pathname = usePathname();
+  const isHomePage = pathname === '/';
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900 text-white">
+    <div className="min-h-screen bg-[#0d0d0d] text-white">
+      <CustomCursor />
       <Navbar />
-
-      {/* 3. NEW: Add the address bar, only shows if connected */}
-      {walletAddress && (
-        <div className="bg-gray-700 text-gray-300 text-sm text-center py-1 shadow-inner">
-          Connected as: {displayAddress}
-        </div>
-      )}
-
-      <main className="flex-grow container mx-auto p-4">{children}</main>
-      <Footer />
+      <main className={isHomePage ? '' : 'min-h-screen'}>
+        {children}
+      </main>
       <NoWalletModal isOpen={isModalOpen} onClose={closeModal} />
     </div>
   );

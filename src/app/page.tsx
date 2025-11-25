@@ -1,15 +1,13 @@
 import HeroSection from "@/components/landing/HeroSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
-import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import CTASection from "@/components/landing/CTASection";
+import ExploreSection from "@/components/landing/ExploreSection";
+
 export default function HomePage() {
   return (
-    <>
+    <main className="min-h-screen bg-[#0d0d0d]">
       <HeroSection />
       <FeaturesSection />
-      <HowItWorksSection />
-      <CTASection />
-      {/* We will add other sections like Features below this later */}
-    </>
+      <ExploreSection />
+    </main>
   );
 }
