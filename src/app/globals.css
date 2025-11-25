@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0d0d0d;
+  --foreground: #ffffff;
+  --pink-gradient: #ff007a;
+  --purple-gradient: #7b3fe4;
+  --blue-gradient: #2172e5;
+  --green-gradient: #1eb468;
+  --orange-gradient: #ff6b00;
 }
 
 @theme inline {
@@ -12,15 +17,87 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Style select dropdowns */
+select {
+  color-scheme: dark;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+select option {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  padding: 12px;
+}
+
+select option:checked {
+  background-color: #1a1a1a !important;
+  background: linear-gradient(0deg, #1a1a1a 0%, #1a1a1a 100%) !important;
+}
+
+select option:hover {
+  background-color: #2a2a2a !important;
+}
+
+/* Gradient backgrounds */
+.gradient-pink-purple {
+  background: linear-gradient(135deg, #2d1b4e 0%, #1a1034 100%);
+}
+
+.gradient-green-teal {
+  background: linear-gradient(135deg, #0d3d30 0%, #0a2520 100%);
+}
+
+.gradient-orange-brown {
+  background: linear-gradient(135deg, #4a2511 0%, #2d1607 100%);
+}
+
+.gradient-purple-grid {
+  background: linear-gradient(135deg, #2d1b3d 0%, #1a0f2e 100%);
+  background-image:
+    linear-gradient(135deg, #2d1b3d 0%, #1a0f2e 100%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 40px);
+}
+
+/* Glowing text effects */
+.glow-text-pink {
+  color: #ff007a;
+  text-shadow: 0 0 20px rgba(255, 0, 122, 0.3);
+}
+
+.glow-text-purple {
+  color: #c698ff;
+  text-shadow: 0 0 20px rgba(123, 63, 228, 0.3);
+}
+
+.glow-text-green {
+  color: #0de39f;
+  text-shadow: 0 0 20px rgba(13, 227, 159, 0.3);
+}
+
+.glow-text-orange {
+  color: #ff6b00;
+  text-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }

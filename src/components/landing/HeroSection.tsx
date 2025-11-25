@@ -1,20 +1,83 @@
+"use client";
+
+import ScrollReveal from '@/components/common/ScrollReveal';
+import Link from 'next/link';
+
 export default function HeroSection() {
   return (
-    <section className="flex items-center justify-center text-center py-24 px-4 sm:py-32 lg:py-40">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-          A Decentralized Marketplace for Verifiable Data
-        </h1>
-        <p className="mt-6 text-lg leading-8 text-gray-300">
-          Leverage the power of blockchain and IPFS to create, share, and utilize datasets with unparalleled trust and transparency.
-        </p>
-        <div className="mt-10">
-          <button
-            className="rounded-md bg-indigo-500 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
-          >
-            Get Started
-          </button>
-        </div>
+    <section className="relative flex items-center justify-center text-center py-20 px-4 sm:py-28 lg:py-36 overflow-hidden">
+      {/* Gradient background effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/20 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="relative max-w-5xl mx-auto z-10">
+        <ScrollReveal direction="fade" delay={100}>
+          <div className="inline-block mb-4">
+            <span className="px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-medium">
+              Blockchain Data Marketplace
+            </span>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal direction="up" delay={200}>
+          <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl mb-6">
+            Trade verified data,
+            <br />
+            <span className="glow-text-purple">trustlessly.</span>
+          </h1>
+        </ScrollReveal>
+
+        <ScrollReveal direction="up" delay={300}>
+          <p className="mt-6 text-xl leading-8 text-gray-400 max-w-3xl mx-auto">
+            Decentralized marketplace for buying and selling blockchain-verified datasets.
+            Secure transactions, immutable records, and complete data provenance.
+          </p>
+        </ScrollReveal>
+
+        <ScrollReveal direction="up" delay={400}>
+          <div className="mt-10 flex items-center justify-center gap-4 flex-wrap">
+            <Link
+              href="/browse"
+              className="rounded-full bg-gradient-to-r from-pink-500 to-purple-600 px-8 py-4 text-base font-semibold text-white shadow-lg hover:shadow-pink-500/50 transition-all duration-300 hover:scale-105"
+            >
+              Get Started
+            </Link>
+            <button className="rounded-full bg-white/5 border border-white/10 px-8 py-4 text-base font-semibold text-white shadow-lg hover:bg-white/10 transition-all duration-300">
+              Learn More
+            </button>
+          </div>
+        </ScrollReveal>
+
+        {/* MetaMask Section */}
+        <ScrollReveal direction="up" delay={500}>
+          <div className="mt-16 pt-12 border-t border-white/10">
+            <p className="text-sm text-gray-500 mb-6">Powered by</p>
+            <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 border border-white/10">
+                <svg className="w-8 h-8" viewBox="0 0 318.6 318.6" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M274.1 35.5l-99.5 73.9L193 65.8z" fill="#e2761b" stroke="#e2761b" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M44.4 35.5l98.7 74.6-17.5-44.3zm193.9 171.3l-26.5 40.6 56.7 15.6 16.3-55.3zm-204.4.9L50.1 263l56.7-15.6-26.5-40.6z" fill="#e4761b" stroke="#e4761b" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M103.6 138.2l-15.8 23.9 56.3 2.5-2-60.5zm111.3 0l-39-34.8-1.3 61.2 56.2-2.5zM106.8 247.4l33.8-16.5-29.2-22.8zm71.1-16.5l33.9 16.5-4.7-39.3z" fill="#e4761b" stroke="#e4761b" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M211.8 247.4l-33.9-16.5 2.7 22.1-.3 9.3zm-105 0l31.5 14.9-.2-9.3 2.5-22.1z" fill="#d7c1b3" stroke="#d7c1b3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M138.8 193.5l-28.2-8.3 19.9-9.1zm40.9 0l8.3-17.4 20 9.1z" fill="#233447" stroke="#233447" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M106.8 247.4l4.8-40.6-31.3.9zM207 206.8l4.8 40.6 26.5-39.7zm23.8-44.7l-56.2 2.5 5.2 28.9 8.3-17.4 20 9.1zm-120.2 23.1l20-9.1 8.2 17.4 5.3-28.9-56.3-2.5z" fill="#cd6116" stroke="#cd6116" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M87.8 162.1l23.6 46-.8-22.9zm120.3 23.1l-1 22.9 23.7-46zm-64-20.6l-5.3 28.9 6.6 34.1 1.5-44.9zm30.5 0l-2.7 18 1.2 45 6.7-34.1z" fill="#e4751f" stroke="#e4751f" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M179.8 193.5l-6.7 34.1 4.8 3.3 29.2-22.8 1-22.9zm-69.2-8.3l.8 22.9 29.2 22.8 4.8-3.3-6.6-34.1z" fill="#f6851b" stroke="#f6851b" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M180.3 262.3l.3-9.3-2.5-2.2h-37.7l-2.3 2.2.2 9.3-31.5-14.9 11 9 22.3 15.5h38.3l22.4-15.5 11-9z" fill="#c0ad9e" stroke="#c0ad9e" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M177.9 230.9l-4.8-3.3h-27.7l-4.8 3.3-2.5 22.1 2.3-2.2h37.7l2.5 2.2z" fill="#161616" stroke="#161616" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M278.3 114.2l8.5-40.8-12.7-37.9-96.2 71.4 37 31.3 52.3 15.3 11.6-13.5-5-3.6 8-7.3-6.2-4.8 8-6.1zM31.8 73.4l8.5 40.8-5.4 4 8 6.1-6.1 4.8 8 7.3-5 3.6 11.5 13.5 52.3-15.3 37-31.3-96.2-71.4z" fill="#763d16" stroke="#763d16" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M267.2 153.5l-52.3-15.3 15.9 23.9-23.7 46 31.2-.4h46.5zm-163.6-15.3l-52.3 15.3-17.4 54.2h46.4l31.1.4-23.6-46zm71 26.4l3.3-57.7 15.2-41.1h-67.5l15 41.1 3.5 57.7 1.2 18.2.1 44.8h27.7l.2-44.8z" fill="#f6851b" stroke="#f6851b" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <div className="text-left">
+                  <p className="text-white font-bold text-sm">MetaMask</p>
+                  <p className="text-gray-500 text-xs">Secure Web3 Wallet</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

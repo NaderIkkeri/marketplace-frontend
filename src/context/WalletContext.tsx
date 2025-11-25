@@ -10,6 +10,7 @@ interface WalletContextType {
   walletAddress: string;
   isModalOpen: boolean;
   connectWallet: () => Promise<void>;
+  disconnectWallet: () => void;
   closeModal: () => void;
   provider: ethers.JsonRpcProvider | null;
   signer: ethers.JsonRpcSigner | null;
@@ -86,10 +87,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (typeof window.ethereum !== "undefined" && provider && contract) {
       try {
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        
+
         // This will prompt the user to connect
         await browserProvider.send("eth_requestAccounts", []);
-        
+
         // Set up the signer after user connects
         const address = await setupSigner(browserProvider, contract);
 
@@ -104,14 +105,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     } else if (!provider || !contract) {
       toast.error('Provider not initialized. Please refresh the page.');
     } else {
-      toast.error('MetaMask not found. Please install the extension.');
+      // Only show modal, no toast notification
       setIsModalOpen(true);
     }
   };
 
+  const disconnectWallet = () => {
+    setWalletAddress("");
+    // Reset contract to read-only version
+    if (provider && CONTRACT_ADDRESS) {
+      const readOnlyContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, provider);
+      setContract(readOnlyContract);
+    }
+    toast.success('Wallet disconnected');
+  };
+
   return (
-    // We pass the read-only provider, but the signer-connected contract
-    <WalletContext.Provider value={{ walletAddress, isModalOpen, connectWallet, closeModal, provider, signer: null, contract }}>
+    <WalletContext.Provider value={{ walletAddress, isModalOpen, connectWallet, disconnectWallet, closeModal, provider, signer: null, contract }}>
       {children}
     </WalletContext.Provider>
   );

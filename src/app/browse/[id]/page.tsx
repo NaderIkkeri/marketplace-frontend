@@ -160,82 +160,130 @@ const DatasetDetailPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   // --- Rendering Logic ---
   if (isLoading) {
-    return <div className="text-center p-10"><LoadingSpinner /></div>;
+    return (
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
   if (error) {
-    return <div className="text-center p-10 text-red-500">{error}</div>;
+    return (
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-4">
+        <div className="text-center bg-red-500/10 border border-red-500/20 rounded-2xl p-8">
+          <p className="text-red-400 text-xl">{error}</p>
+        </div>
+      </div>
+    );
   }
   if (!dataset) {
-    return <div className="text-center p-10 text-gray-400">Dataset not found.</div>;
+    return (
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-4">
+        <p className="text-gray-400 text-xl">Dataset not found.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 text-gray-100">
-      <div className="max-w-4xl mx-auto bg-gray-800 rounded-lg shadow-lg p-6">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-4">
-            <h1 className="text-3xl font-bold">{dataset.name}</h1>
-            <span className="bg-indigo-600 text-white text-sm font-medium px-3 py-1 rounded-full">{dataset.category}</span>
+    <div className="min-h-screen bg-[#0d0d0d] text-gray-100">
+      {/* Hero Section */}
+      <div className="relative py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl"></div>
         </div>
-        {/* Description */}
-        <p className="text-gray-400 mb-6">{dataset.description}</p>
 
-        {/* Details Section */}
-        <div className="border-t border-gray-700 pt-4">
-          <h3 className="text-lg font-semibold mb-3">Details</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-500 font-medium">Owner</p>
-              <p className="font-mono break-all text-gray-300">{dataset.ownerAddress}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 font-medium">Price</p>
-              <p className="font-semibold text-lg text-green-400">{dataset.price}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 font-medium">Format</p>
-              <p className="text-gray-300">{dataset.format}</p>
-            </div>
-            <div>
-              <p className="text-gray-500 font-medium">Dataset ID</p>
-              <p className="text-gray-300">{dataset.id.toString()}</p>
+        <div className="relative max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm font-semibold px-4 py-2 rounded-full">
+                  {dataset.category}
+                </span>
+                <span className="bg-white/5 text-gray-300 text-sm font-medium px-4 py-2 rounded-full border border-white/10">
+                  {dataset.format}
+                </span>
+              </div>
+              <h1 className="text-5xl font-bold mb-4">{dataset.name}</h1>
+              <p className="text-xl text-gray-400 leading-relaxed">{dataset.description}</p>
             </div>
           </div>
-        </div>
 
-        {/* --- UPDATE UI --- */}
-        <div className="mt-8 border-t border-gray-700 pt-6">
-          {isCheckingAccess ? (
-            <div className="flex justify-center">
-              <LoadingSpinner />
+          {/* Main Card */}
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-8 mb-6">
+            {/* Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <p className="text-sm text-gray-500 font-medium mb-2">Provider Address</p>
+                <p className="font-mono text-white break-all">{dataset.ownerAddress}</p>
+              </div>
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                <p className="text-sm text-gray-500 font-medium mb-2">Dataset ID</p>
+                <p className="text-white font-semibold">#{dataset.id.toString()}</p>
+              </div>
             </div>
-          ) : hasAccess ? (
-            // If user has access, show Download button
-            <a
-              href={`https://gateway.pinata.cloud/ipfs/${dataset.ipfsCid}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-center block"
-            >
-              Download Dataset
-            </a>
-          ) : (
-            // If user does NOT have access, show Purchase button
-            <button
-              onClick={handlePurchase}
-              disabled={isPurchasing}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
-            >
-              {isPurchasing ? "Processing..." : `Purchase Access for ${dataset.price}`}
-            </button>
-          )}
 
-          {/* This shows the status (e.g., "Please connect wallet...") */}
-          {purchaseStatus && !hasAccess && (
-            <p className={`text-center text-sm mt-4 ${purchaseStatus.includes('failed') || purchaseStatus.includes('cancelled') ? 'text-red-400' : 'text-gray-400'}`}>
-              {purchaseStatus}
-            </p>
-          )}
+            {/* Price Section */}
+            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-6 mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400 mb-1">Price</p>
+                  <p className="text-4xl font-bold glow-text-purple">{dataset.price}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-400 mb-1">Format</p>
+                  <p className="text-xl font-semibold text-white">{dataset.format}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Section */}
+            <div>
+              {isCheckingAccess ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner />
+                </div>
+              ) : hasAccess ? (
+                <a
+                  href={`https://gateway.pinata.cloud/ipfs/${dataset.ipfsCid}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-green-500/50 transition-all duration-300 hover:scale-105 text-lg"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download Dataset
+                </a>
+              ) : (
+                <button
+                  onClick={handlePurchase}
+                  disabled={isPurchasing}
+                  className="w-full px-8 py-4 rounded-full font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg hover:shadow-pink-500/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-lg"
+                >
+                  {isPurchasing ? "Processing Purchase..." : `Purchase Access for ${dataset.price}`}
+                </button>
+              )}
+
+              {purchaseStatus && !hasAccess && (
+                <div className={`mt-4 text-center p-4 rounded-2xl ${
+                  purchaseStatus.includes('failed') || purchaseStatus.includes('cancelled')
+                    ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+                    : purchaseStatus.includes('✅')
+                    ? 'bg-green-500/10 border border-green-500/20 text-green-400'
+                    : 'bg-white/5 border border-white/10 text-gray-400'
+                }`}>
+                  <p className="font-medium">{purchaseStatus}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* IPFS Info */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <h3 className="text-sm font-semibold text-gray-400 mb-2">IPFS Content ID</h3>
+            <p className="font-mono text-sm text-gray-300 break-all">{dataset.ipfsCid}</p>
+          </div>
         </div>
       </div>
     </div>
