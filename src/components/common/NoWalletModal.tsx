@@ -30,7 +30,7 @@ export default function NoWalletModal({ isOpen, onClose }: NoWalletModalProps) {
 
           <h2 className="text-3xl font-bold mb-3">MetaMask Required</h2>
           <p className="text-gray-400 mb-8 leading-relaxed">
-            You need MetaMask wallet extension to interact with ChainVault.
+            You need MetaMask wallet extension to interact with QuantifyX.
             MetaMask is a secure crypto wallet that enables Web3 applications.
           </p>
 

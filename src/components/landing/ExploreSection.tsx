@@ -2,6 +2,7 @@
 
 import { ArrowRight } from 'lucide-react';
 import ScrollReveal from '@/components/common/ScrollReveal';
+import Logo from '@/components/Logo';
 
 const exploreItems = [
   {
@@ -17,12 +18,12 @@ const exploreItems = [
   {
     icon: '📚',
     title: 'Docs',
-    description: 'Explore our library of developer docs to get started building with ChainVault',
+    description: 'Explore our library of developer docs to get started building with QuantifyX',
   },
   {
     icon: '💬',
     title: 'Socials',
-    description: 'Follow ChainVault on X, Discord, LinkedIn, and Telegram',
+    description: 'Follow QuantifyX on X, Discord, LinkedIn, and Telegram',
   },
 ];
 
@@ -76,12 +77,8 @@ export default function ExploreSection() {
               {/* Brand Column */}
               <div className="lg:col-span-2">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
-                    <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round"/>
-                    </svg>
-                  </div>
-                  <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">ChainVault</span>
+                  <Logo className="w-12 h-12" />
+                  <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">QuantifyX</span>
                 </div>
                 <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-sm">
                   The premier decentralized marketplace for blockchain-verified datasets. Trade verified data trustlessly on Ethereum L2.
@@ -148,7 +145,7 @@ export default function ExploreSection() {
             <div className="pt-8 border-t border-white/10">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-gray-500">
-                  <p>© 2025 ChainVault. Developed by <span className="text-purple-400 font-semibold">ClassConnect Teams</span>.</p>
+                  <p>© 2025 QuantifyX. Developed by <span className="text-purple-400 font-semibold">ClassConnect Teams</span>.</p>
                   <span className="hidden md:block text-gray-700">|</span>
                   <p className="text-xs">All rights reserved.</p>
                 </div>
