@@ -9,7 +9,7 @@ import { Toaster } from "react-hot-toast"; // Import the Toaster
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ChainVault - Blockchain Data Marketplace",
+  title: "QuantifyX - Blockchain Data Marketplace",
   description: "Trade verified data trustlessly. A decentralized marketplace for blockchain-verified datasets.",
 };
 

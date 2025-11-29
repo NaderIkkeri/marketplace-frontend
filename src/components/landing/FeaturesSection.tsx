@@ -20,7 +20,7 @@ const features = [
   {
     title: 'Data Provision',
     subtitle: 'Power onchain markets.',
-    description: 'Provide datasets and collect fees using the ChainVault Interface.',
+    description: 'Provide datasets and collect fees using the QuantifyX Interface.',
     gradient: 'gradient-green-teal',
     glowClass: 'glow-text-green',
     buttons: [
@@ -30,7 +30,7 @@ const features = [
   {
     title: 'Trading API',
     subtitle: 'DeFi, direct to your users.',
-    description: 'Use the same API that powers the ChainVault Web App and Wallet, trusted by leading protocols.',
+    description: 'Use the same API that powers the QuantifyX Web App and Wallet, trusted by leading protocols.',
     gradient: 'gradient-orange-brown',
     glowClass: 'glow-text-orange',
     buttons: [

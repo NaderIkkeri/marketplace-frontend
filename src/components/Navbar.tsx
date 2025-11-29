@@ -26,8 +26,8 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <Logo className="w-9 h-9" />
-            <span className="text-lg font-bold hidden sm:block">ChainVault</span>
+            <Logo className="w-12 h-12" />
+            <span className="text-lg font-bold hidden sm:block">QuantifyX</span>
           </Link>
 
           {/* Desktop Navigation */}
