@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import ButtonSpinner from "@/components/common/ButtonSpinner";
 
-// (TagsInput component code remains the same as you provided)
+// (TagsInput component remains exactly the same)
 function TagsInput({ onChange }: { onChange: (tags: string[]) => void }) {
   const [tags, setTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -24,11 +24,7 @@ function TagsInput({ onChange }: { onChange: (tags: string[]) => void }) {
         {tags.map((tag, index) => (
           <span key={index} className="flex items-center bg-purple-500/20 border border-purple-500/30 text-purple-300 px-3 py-1 rounded-full text-sm">
             {tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tag)}
-              className="ml-2 text-purple-300 hover:text-red-400 transition-colors"
-            >
+            <button type="button" onClick={() => removeTag(tag)} className="ml-2 text-purple-300 hover:text-red-400 transition-colors">
               <X className="h-3 w-3" strokeWidth={3} />
             </button>
           </span>
@@ -46,9 +42,7 @@ function TagsInput({ onChange }: { onChange: (tags: string[]) => void }) {
   );
 }
 
-
 export default function CreatePage() {
-  // 1. Existing form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -57,68 +51,74 @@ export default function CreatePage() {
   const [format, setFormat] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
-  // 2. New boolean loading states
   const [ipfsCid, setIpfsCid] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 3. Get wallet context and router for navigation
-  // We get walletAddress to check for connection
   const { contract, walletAddress } = useWallet();
   const router = useRouter();
 
-  // 4. Function to handle file upload to our API route -> Pinata
+  // 1. UPDATED: Upload to Django Backend (Secure Processing Node)
   const handleUploadToIpfs = async () => {
     if (!file) {
       toast.error("Please select a file first.");
       return;
     }
+    if (!walletAddress) {
+        toast.error("Please connect your wallet.");
+        return;
+    }
     
     setIsUploading(true);
-    const loadingToastId = toast.loading("Uploading to IPFS..."); // Show loading toast
+    const loadingToastId = toast.loading("Encrypting & Uploading to Processing Node...");
 
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await fetch('/api/upload', { method: 'POST', body: formData });
+      formData.append('name', name || file.name);
+      formData.append('owner_address', walletAddress); // Backend needs this for ownership linking
+
+      // Sending to Django Backend (Secure Upload Endpoint)
+      const response = await fetch('http://localhost:8000/api/datasets/secure-upload/', {
+        method: 'POST',
+        body: formData
+      });
+      
       const data = await response.json();
 
       if (data.success) {
-        toast.success("✅ Upload successful!", { id: loadingToastId });
-        setIpfsCid(data.cid);
+        toast.success("✅ Secure Upload successful!", { id: loadingToastId });
+        setIpfsCid(data.ipfs_cid);
       } else {
         toast.error(`Upload failed: ${data.error}`, { id: loadingToastId });
       }
     } catch (error) {
-      toast.error("Upload failed. See console for details.", { id: loadingToastId });
+      toast.error("Upload failed. Is Django running on port 8000?", { id: loadingToastId });
       console.error(error);
     } finally {
-      setIsUploading(false); // Stop loading state
+      setIsUploading(false);
     }
   };
 
-  // 5. Function to handle final submission to the blockchain
+  // 2. UPDATED: Submit to Blockchain AND Finalize in Django
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ipfsCid) {
       toast.error("Please upload a file to IPFS first.");
       return;
     }
-
-    // --- THIS IS THE FIX ---
-    // We check for walletAddress instead of signer
     if (!contract || !walletAddress) {
       toast.error("Please connect your wallet first.");
       return;
     }
 
     setIsSubmitting(true);
+    const loadingToastId = toast.loading("Submitting to blockchain...");
 
     try {
-      // Convert price from ETH string to wei BigInt
       const priceInWei = ethers.parseEther(price);
       
-      // The 'contract' object from useWallet() already has the signer
+      // A) Mint the NFT
       const tx = await contract.createDataset(
         name,
         description,
@@ -128,25 +128,36 @@ export default function CreatePage() {
         priceInWei
       );
 
-      // Use toast.promise to handle loading, success, and error
-      await toast.promise(
-        tx.wait(), // Wait for the transaction to be mined
-        {
-          loading: 'Submitting to blockchain...',
-          success: '✅ Dataset created successfully!',
-          error: 'Transaction failed. See console.'
-        }
-      );
+      toast.loading("Waiting for block confirmation...", { id: loadingToastId });
+      const receipt = await tx.wait();
+      
+      // B) Get the new Token ID (Simple assumption for MVP: It's the last token owned by user)
+      // In production, parse logs from 'receipt' to be exact.
+      const balance = await contract.balanceOf(walletAddress);
+      const newTokenIdBigInt = await contract.tokenOfOwnerByIndex(walletAddress, balance - 1n);
+      const newTokenId = newTokenIdBigInt.toString();
 
-      // Redirect to the browse page after success
+      // C) Finalize with Django (Link CID to TokenID)
+      toast.loading("Finalizing secure record...", { id: loadingToastId });
+      
+      await fetch('http://localhost:8000/api/datasets/finalize/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ipfs_cid: ipfsCid,
+          token_id: newTokenId,
+          owner_address: walletAddress
+        })
+      });
+
+      toast.success("✅ Dataset created successfully!", { id: loadingToastId });
       setTimeout(() => router.push('/browse'), 2000);
 
     } catch (error) {
-      // This catches errors *before* the transaction is sent (e.g., user rejects)
-      toast.error("Transaction was rejected or failed.");
+      toast.error("Transaction failed. See console.", { id: loadingToastId });
       console.error(error);
     } finally {
-      setIsSubmitting(false); // Stop loading state
+      setIsSubmitting(false);
     }
   };
   
@@ -167,13 +178,13 @@ export default function CreatePage() {
             Upload and monetize your verified data on the blockchain
           </p>
 
-          {/* --- Part 1: IPFS Upload --- */}
+          {/* --- Part 1: Secure Upload --- */}
           <div className="bg-white/5 border border-white/10 rounded-3xl p-8 mb-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center font-bold">
                 1
               </div>
-              <h2 className="text-2xl font-bold">Upload Your Data</h2>
+              <h2 className="text-2xl font-bold">Secure Upload & Encrypt</h2>
             </div>
 
             <div className="space-y-4">
@@ -184,6 +195,7 @@ export default function CreatePage() {
                   className="w-full text-sm text-gray-400 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-pink-500 file:to-purple-600 file:text-white hover:file:opacity-90 file:cursor-pointer"
                 />
               </div>
+              <p className="text-xs text-gray-500 ml-2">Your file will be encrypted by our Processing Node before storage.</p>
 
               <button
                 type="button"
@@ -191,13 +203,13 @@ export default function CreatePage() {
                 className="w-full h-12 flex justify-center items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full font-semibold hover:shadow-blue-500/50 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 disabled={!file || isUploading}
               >
-                {isUploading ? <ButtonSpinner /> : 'Upload to IPFS'}
+                {isUploading ? <ButtonSpinner /> : 'Encrypt & Upload'}
               </button>
 
               {ipfsCid && (
                 <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
-                  <p className="text-xs text-green-400 mb-1 font-semibold">✅ Upload Successful</p>
-                  <p className="text-xs text-gray-500 mb-1">IPFS CID:</p>
+                  <p className="text-xs text-green-400 mb-1 font-semibold">✅ Secure Storage Successful</p>
+                  <p className="text-xs text-gray-500 mb-1">Encrypted IPFS CID:</p>
                   <p className="font-mono text-green-300 break-all text-sm">{ipfsCid}</p>
                 </div>
               )}
@@ -206,7 +218,8 @@ export default function CreatePage() {
 
           {/* --- Part 2: Submit Metadata --- */}
           <form onSubmit={handleSubmit} className="bg-white/5 border border-white/10 rounded-3xl p-8">
-            <div className="flex items-center gap-3 mb-6">
+            {/* ... (Form fields for Title, Description, etc. remain exactly the same) ... */}
+             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center font-bold">
                 2
               </div>
@@ -216,37 +229,16 @@ export default function CreatePage() {
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-300">Title</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all"
-                  placeholder="Enter dataset title"
-                />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all" placeholder="Enter dataset title"/>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-300">Description</label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                  rows={4}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all resize-none"
-                  placeholder="Describe your dataset..."
-                />
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} required rows={4} className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all resize-none" placeholder="Describe your dataset..."/>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-300">Category</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    required
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all appearance-none cursor-pointer"
-                  >
+                  <select value={category} onChange={(e) => setCategory(e.target.value)} required className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all appearance-none cursor-pointer">
                     <option value="" className="bg-gray-900">Select category</option>
                     <option value="Finance" className="bg-gray-900">Finance</option>
                     <option value="Health" className="bg-gray-900">Health</option>
@@ -255,15 +247,9 @@ export default function CreatePage() {
                     <option value="Other" className="bg-gray-900">Other</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-300">Format</label>
-                  <select
-                    value={format}
-                    onChange={(e) => setFormat(e.target.value)}
-                    required
-                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all appearance-none cursor-pointer"
-                  >
+                  <select value={format} onChange={(e) => setFormat(e.target.value)} required className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all appearance-none cursor-pointer">
                     <option value="" className="bg-gray-900">Select format</option>
                     <option value="CSV" className="bg-gray-900">CSV</option>
                     <option value="JSON" className="bg-gray-900">JSON</option>
@@ -273,20 +259,10 @@ export default function CreatePage() {
                   </select>
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-300">Price (ETH)</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all"
-                  placeholder="e.g. 0.05"
-                />
+                <input type="number" step="0.001" value={price} onChange={(e) => setPrice(e.target.value)} required className="w-full rounded-2xl border border-white/10 bg-white/5 p-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all" placeholder="e.g. 0.05"/>
               </div>
-
               <TagsInput onChange={setTags} />
 
               <button
